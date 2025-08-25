@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/ayush-bothra/backend-optimizer/internal/db"
+	"github.com/ayush-bothra/backend-optimizer/internal/api"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -63,14 +64,7 @@ func main() {
 	}
 	fmt.Println("Inserted ID: ", res.InsertedID)
 
-	// HandleFunc registers the handler function for the given pattern in [DefaultServeMux].
-	// The documentation for [ServeMux] explains how patterns are matched.
-	http.HandleFunc("/", helloHandler)
+	r := api.SetUpRoutes(DB.Collection("Todo_DB"))
 
-	fmt.Println("server running at http://localhost:8080/")
-
-	// ListenAndServe listens on the TCP network address addr and then calls
-	// [Serve] with handler to handle requests on incoming connections.
-	// The handler is typically nil, in which case [DefaultServeMux] is used.
-	http.ListenAndServe(":8080", nil)
+	r.Run(":8080")
 }
