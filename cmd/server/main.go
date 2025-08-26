@@ -17,8 +17,6 @@ main
 */
 
 import (
-	"fmt"
-	"net/http"
 	"github.com/ayush-bothra/backend-optimizer/internal/db"
 	"github.com/ayush-bothra/backend-optimizer/internal/api"
 	"github.com/joho/godotenv"
@@ -28,10 +26,6 @@ import (
 
 )
 
-
-func helloHandler(wrt http.ResponseWriter, req *http.Request) {
-	fmt.Fprint(wrt, "Hello World!\n")
-}
 
 func main() {
 	
@@ -56,13 +50,6 @@ func main() {
 		panic(err)
 	}
 	}()
-
-	todo := db.ToDoList_DB{Title: "Learn mongoDB", Done: false}
-	res, err := db.InsertTodo(DB, todo)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Inserted ID: ", res.InsertedID)
 
 	r := api.SetUpRoutes(DB.Collection("Todo_DB"))
 

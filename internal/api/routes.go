@@ -25,6 +25,14 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 	h := NewHandler(db)
 
 	// call the GET API
-	r.GET("/todos", h.GetTodos)
+	r.GET("/todos/", h.GetTodos)
+	r.GET("/todos/:id", h.GetTodobyIDHandler)
+	// call the POST API
+	r.POST("/todos", h.CreateTodoByID)
+	// call the PUT API
+	r.PUT("/todos/:id", h.UpdateTodoByID)
+	// call the DELETE API
+	r.DELETE("/todos/:id", h.DeleteTodoByID)
+	r.DELETE("/todos/", h.DeleteTodoByType)
 	return r
 }

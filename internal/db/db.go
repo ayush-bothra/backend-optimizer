@@ -104,3 +104,8 @@ func DeleteTodo (db *mongo.Database, id any) (*mongo.DeleteResult, error) {
 	filter := bson.M{"_id":id}
 	return collection.DeleteOne(context.TODO(), filter)
 }
+
+func DeleteTodoByFilter (db *mongo.Database, filter bson.M) (*mongo.DeleteResult, error) {
+	collection := db.Collection("Todo_DB")
+	return collection.DeleteMany(context.TODO(), filter)
+}
