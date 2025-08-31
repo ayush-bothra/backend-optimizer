@@ -10,7 +10,7 @@ app (required for HTTP requests (?))
 imports needed:
 will be importing the api, utils, cache, db
 from the current structure, and will also
-need fiber/v2 for the HTTP
+need gin/v2 for the HTTP
 
 functions required: 
 main
