@@ -8,14 +8,12 @@ imports required:
 this file will import the service,
 utils, gin,
 
-functions needed:
-RiskCheckHandler(c *fiber.Ctx)
-PortfolioHandler(c *fiber.Ctx) (optional)
 */
 
 import (
 	"context"
 	"github.com/ayush-bothra/backend-optimizer/internal/db"
+	"github.com/ayush-bothra/backend-optimizer/internal/models"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -44,7 +42,10 @@ func (h *Handler) GetTodobyIDHandler(c *gin.Context) {
 		return
 	}
 
-	todo, err := db.GetTodoByID(h.db.Database(), objID)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+	todo, err := db.GetTodoByID(ctx, h.db.Database(), objID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, gin.H{"error: ": err.Error()})
@@ -59,6 +60,7 @@ func (h *Handler) GetTodobyIDHandler(c *gin.Context) {
 
 }
 
+// suggestion: add pagination
 func (h *Handler) GetTodos(c *gin.Context) {
 	// WithTimeout returns WithDeadline(parent, time.Now().Add(timeout)).
 	//
@@ -91,7 +93,7 @@ func (h *Handler) GetTodos(c *gin.Context) {
 }
 
 func (h *Handler) CreateTodoByID(c *gin.Context) {
-	var new_todos db.ToDoList_DB
+	var new_todos models.ToDoList_DB
 
 	// ShouldBindJSON is a shortcut for c.ShouldBindWith(obj, binding.JSON).
 	// ShouldBindWith binds the passed struct pointer using the specified binding engine.
@@ -103,7 +105,10 @@ func (h *Handler) CreateTodoByID(c *gin.Context) {
 		return
 	}
 
-	res, err := db.InsertTodo(h.db.Database(), new_todos)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+	res, err := db.InsertTodo(ctx, h.db.Database(), new_todos)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})
@@ -114,7 +119,7 @@ func (h *Handler) CreateTodoByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateTodoByID(c *gin.Context) {
-	var updated_todos db.ToDoList_DB
+	var updated_todos models.ToDoList_DB
 	id := c.Param("id")
 
 	objID, err := bson.ObjectIDFromHex(id)
@@ -128,7 +133,10 @@ func (h *Handler) UpdateTodoByID(c *gin.Context) {
 		return
 	}
 
-	res, err := db.UpdateTodo(h.db.Database(), objID, updated_todos)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+	res, err := db.UpdateTodo(ctx, h.db.Database(), objID, updated_todos)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error ": err.Error()})
@@ -150,7 +158,10 @@ func (h *Handler) DeleteTodoByID(c *gin.Context) {
 		return
 	}
 
-	res, err := db.DeleteTodo(h.db.Database(), objID)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+	res, err := db.DeleteTodo(ctx, h.db.Database(), objID)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
@@ -176,7 +187,10 @@ func (h *Handler) DeleteTodoByType(c *gin.Context) {
 		return
 	}
 
-	res, err := db.DeleteTodoByFilter(h.db.Database(), filter)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+	res, err := db.DeleteTodoByFilter(ctx, h.db.Database(), filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error ": err.Error()})
 		return

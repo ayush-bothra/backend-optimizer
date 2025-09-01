@@ -15,7 +15,7 @@ using  go-jwt-middleware/v2/validator and jwks
 consider using that if time permits
 
 functions needed:
-setUpRoutes(app *fiber.App)
+setUpRoutes(app *gin.Engine)
 */
 
 import (

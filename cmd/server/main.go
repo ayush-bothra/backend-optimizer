@@ -48,7 +48,7 @@ func main() {
 		}
 	}()
 
-	r := api.SetUpRoutes(DB.Collection("Todo_DB"))
+	r := api.SetUpRoutes(DB.Collection("todos"))
 
 	r.Run(":8080")
 }
