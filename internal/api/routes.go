@@ -34,19 +34,17 @@ import (
 
 func NewAuthMiddleWare() (*validator.Validator, error) {
 	if err := godotenv.Load(); err != nil {
-        log.Fatal("Error loading .env file")
-    }
+		log.Fatal("Error loading .env file")
+	}
 	// returns a url.URL and the error during parsing, if any
 	issuer, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/")
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
-	audience := os.Getenv("AUTH_AUDIENCE")
-
+	audience := os.Getenv("AUTH0_AUDIENCE")
 
 	// Create JWKS (JSON Web Key Set) provider
-	provider := jwks.NewCachingProvider(issuer, 5 * time.Minute)
-	
+	provider := jwks.NewCachingProvider(issuer, 5*time.Minute)
 
 	// Parse the JWT:
 	jwtValidator, err := validator.New(
@@ -56,10 +54,10 @@ func NewAuthMiddleWare() (*validator.Validator, error) {
 		[]string{audience},
 	)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
-	return jwtValidator, nil 
+	return jwtValidator, nil
 }
 
 // HandlerFunc defines the handler used by gin middleware as return value.
@@ -68,7 +66,7 @@ func GinJWTMiddleware(m *jwtmiddleware.JWTMiddleware) gin.HandlerFunc {
 	// Middleware must wrap the handler instead of running once,
 	// so we return a func that validates JWT before calling the next handler.
 
-	return func (c *gin.Context) {
+	return func(c *gin.Context) {
 		// call net/http middleware:
 
 		// note: this is gin.__ and shld be handled with care
@@ -87,10 +85,11 @@ func GinJWTMiddleware(m *jwtmiddleware.JWTMiddleware) gin.HandlerFunc {
 		handler.ServeHTTP(w, r)
 
 		// If we got here without c.Next(), it means auth failed
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		if c.IsAborted() {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		}
 	}
 }
-
 
 func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 	// initialize the gin Engine
@@ -104,8 +103,8 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 
 	// The jwtValidator is a *validator, which contains the ValidateToken func
 	// so it just catches that func in here, no need to define separately
-	// ValidateToken validates the passed in JWT using the jose v2 package.	
-	// WithCredentialsOptional sets up if credentials are optional or not. 
+	// ValidateToken validates the passed in JWT using the jose v2 package.
+	// WithCredentialsOptional sets up if credentials are optional or not.
 	// If set to true then an empty token will be considered valid.
 	jwtMw := jwtmiddleware.New(
 		jwtValidator.ValidateToken,
@@ -119,15 +118,15 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 	gjwt := GinJWTMiddleware(jwtMw)
 
 	// call the GET API
-	r.GET("/todos/",gjwt, h.GetTodos)
-	r.GET("/todos/:id",gjwt, h.GetTodobyIDHandler)
+	r.GET("/todos/", gjwt, h.GetTodos)
+	r.GET("/todos/:id", gjwt, h.GetTodobyIDHandler)
 	// call the POST API
-	r.POST("/todos",gjwt, h.CreateTodoByID)
+	r.POST("/todos", gjwt, h.CreateTodoByID)
 	// call the PUT API
-	r.PUT("/todos/:id",gjwt, h.UpdateTodoByID)
+	r.PUT("/todos/:id", gjwt, h.UpdateTodoByID)
 	// call the DELETE API
-	r.DELETE("/todos/:id",gjwt, h.DeleteTodoByID)
-	r.DELETE("/todos/",gjwt, h.DeleteTodoByType)
+	r.DELETE("/todos/:id", gjwt, h.DeleteTodoByID)
+	r.DELETE("/todos/", gjwt, h.DeleteTodoByType)
 
 	return r
 }

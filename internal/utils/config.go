@@ -1,6 +1,5 @@
 package utils
 
-
 /*
 this file will manage the config for
 everything

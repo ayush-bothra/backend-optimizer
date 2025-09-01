@@ -3,7 +3,7 @@ package ai
 /*
 this file will handle AI interface
 still deciding whether AI shld be locl
-or some sort of API call to simulate 
+or some sort of API call to simulate
 actual AI interaction
 
 imports needed:

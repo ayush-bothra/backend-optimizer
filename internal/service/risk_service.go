@@ -1,16 +1,15 @@
 package service
 
-
 /*
 this is the business logic layer
 possibly the more important one of
 all the files present in this folder
 
-will integrate the logic layer with 
+will integrate the logic layer with
 the cache and DB and the AI model
 
 imports needed:
-will import the cache, db, ai and 
+will import the cache, db, ai and
 utils packages
 
 functions:

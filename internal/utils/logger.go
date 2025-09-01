@@ -1,6 +1,5 @@
 package utils
 
-
 /*
 this will log all the info that we parse
 for every API call

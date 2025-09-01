@@ -1,6 +1,5 @@
 package tests
 
-
 /*
 This is to benchmark endpoints
 using vegeta or go test framework
