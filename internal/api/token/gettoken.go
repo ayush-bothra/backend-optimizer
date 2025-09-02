@@ -18,7 +18,7 @@ func main() {
 	url := "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token"
 
 	body := map[string]string{
-		"client_id":     "KDdKFRqwVgBSJNwJtzy9r1dKflKCeRdV",
+		"client_id":     os.Getenv("CLIENT0_ID"),
 		"client_secret": os.Getenv("CLIENT0_SECRET"),
 		"audience":      "http://localhost:8080/",
 		"grant_type":    "client_credentials",

@@ -113,14 +113,17 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 
 	// creates a new Handler
 	h := NewHandler(db)
-
+	uh := NewUserHandler(db)
 	// note -> gin accepts multiple Handlerfuncs.
 	gjwt := GinJWTMiddleware(jwtMw)
 
 	// call the GET API
+	// --- r.GET("/get-token", uh.LoginUser) --- {manual login, use oauth} 
 	r.GET("/todos/", gjwt, h.GetTodos)
 	r.GET("/todos/:id", gjwt, h.GetTodobyIDHandler)
 	// call the POST API
+	r.POST("/Register", uh.Register)
+	r.POST("/Login", uh.Login)
 	r.POST("/todos", gjwt, h.CreateTodoByID)
 	// call the PUT API
 	r.PUT("/todos/:id", gjwt, h.UpdateTodoByID)
