@@ -19,24 +19,22 @@ setUpRoutes(app *gin.Engine)
 */
 
 import (
-	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
-	"github.com/auth0/go-jwt-middleware/v2/jwks"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
+
+	// jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/jwks"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func NewAuthMiddleWare() (*validator.Validator, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	// returns a url.URL and the error during parsing, if any
+// NewAuthValidator creates a validator for incoming Auth0 JWTs.
+func NewAuthValidator() (*validator.Validator, error) {
 	issuer, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/")
 	if err != nil {
 		return nil, err
@@ -56,78 +54,63 @@ func NewAuthMiddleWare() (*validator.Validator, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return jwtValidator, nil
 }
 
-// HandlerFunc defines the handler used by gin middleware as return value.
-// type HandlerFunc func(*Context)
-func GinJWTMiddleware(m *jwtmiddleware.JWTMiddleware) gin.HandlerFunc {
-	// Middleware must wrap the handler instead of running once,
-	// so we return a func that validates JWT before calling the next handler.
-
-	return func(c *gin.Context) {
-		// call net/http middleware:
-
-		// note: this is gin.__ and shld be handled with care
-		w := c.Writer
-		// this is *http.request
-		r := c.Request
-
-		// jwtmiddleware works on http.Handler
-		handler := m.CheckJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			//  continue only if JWT is valid
-			if !c.IsAborted() {
-				c.Next()
-			}
-		}))
-
-		handler.ServeHTTP(w, r)
-
-		// If we got here without c.Next(), it means auth failed
-		if c.IsAborted() {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+// below func will return a gin handlerfunc and requires
+// a jwtvalidator as its argument
+func Auth0MiddleWare(jwtValidator *validator.Validator) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"err": "missing authorization error."})
+			return
 		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if token == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"err": "missing token."})
+			return
+		}
+
+		validated, err := jwtValidator.ValidateToken(ctx.Request.Context(), token)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"err": err.Error()})
+			return
+		}
+
+		ctx.Set("jwt", validated)
+		ctx.Next()
 	}
 }
 
+// SetUpRoutes configures Gin routes with JWT middleware.
 func SetUpRoutes(db *mongo.Collection) *gin.Engine {
-	// initialize the gin Engine
 	r := gin.Default()
 
-	// creating the validator using above func:
-	jwtValidator, err := NewAuthMiddleWare()
+	jwtValidator, err := NewAuthValidator()
 	if err != nil {
-		log.Fatalf("failed to set up the middleware: %v", err)
+		log.Fatalf("[JWT] Failed to set up validator: %v", err)
 	}
 
-	// The jwtValidator is a *validator, which contains the ValidateToken func
-	// so it just catches that func in here, no need to define separately
-	// ValidateToken validates the passed in JWT using the jose v2 package.
-	// WithCredentialsOptional sets up if credentials are optional or not.
-	// If set to true then an empty token will be considered valid.
-	jwtMw := jwtmiddleware.New(
-		jwtValidator.ValidateToken,
-		jwtmiddleware.WithCredentialsOptional(false),
-	)
+	// jwtMw := jwtmiddleware.New(
+	// 	jwtValidator.ValidateToken,
+	// 	jwtmiddleware.WithCredentialsOptional(false),
+	// )
 
-	// creates a new Handler
+	gjwt := Auth0MiddleWare(jwtValidator)
+
+	// Handlers
 	h := NewHandler(db)
 	uh := NewUserHandler(db)
-	// note -> gin accepts multiple Handlerfuncs.
-	gjwt := GinJWTMiddleware(jwtMw)
 
-	// call the GET API
-	// --- r.GET("/get-token", uh.LoginUser) --- {manual login, use oauth} 
+	// Routes
 	r.GET("/todos/", gjwt, h.GetTodos)
 	r.GET("/todos/:id", gjwt, h.GetTodobyIDHandler)
-	// call the POST API
 	r.POST("/Register", uh.Register)
 	r.POST("/Login", uh.Login)
 	r.POST("/todos", gjwt, h.CreateTodoByID)
-	// call the PUT API
 	r.PUT("/todos/:id", gjwt, h.UpdateTodoByID)
-	// call the DELETE API
 	r.DELETE("/todos/:id", gjwt, h.DeleteTodoByID)
 	r.DELETE("/todos/", gjwt, h.DeleteTodoByType)
 
