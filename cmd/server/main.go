@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/ayush-bothra/backend-optimizer/internal/api"
 	"github.com/ayush-bothra/backend-optimizer/internal/db"
+	"github.com/ayush-bothra/backend-optimizer/internal/cache"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -36,7 +37,7 @@ func main() {
 	}
 
 	DB, client := db.ConnectDB(mongoURI)
-
+	rdb := cache.ConnectToRedis()
 	// This function will run after connect
 	// is done running, similar to the
 	// destructor (other sections of the code will function as normal)
@@ -47,8 +48,10 @@ func main() {
 			panic(err)
 		}
 	}()
-
+	defer rdb.Close()
+	ctx := context.Background()
 	r := api.SetUpRoutes(DB.Collection("todos"))
-
+	cache.SetToRedis(rdb, ctx, "intro", "hello world")
+	cache.GetFromRedis(rdb, ctx, "intro")
 	r.Run(":8080")
 }

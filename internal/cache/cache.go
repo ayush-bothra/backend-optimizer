@@ -47,8 +47,8 @@ func ConnectToRedis() *redis.Client {
 }
 
 // shld run later on a gin handlerfunc to add to list of calls
-func SetToRedis(rdb *redis.Client, ctx context.Context) {
-	if err := rdb.Set(ctx, "intro", "hello world", 0).Err(); err != nil {
+func SetToRedis(rdb *redis.Client, ctx context.Context, key string, value interface{}) {
+	if err := rdb.Set(ctx, key, value, 0).Err(); err != nil {
 		panic(err)
 	}
 }
