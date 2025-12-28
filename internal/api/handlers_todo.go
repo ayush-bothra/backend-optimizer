@@ -21,15 +21,6 @@ import (
 	"time"
 )
 
-type Handler struct {
-	db *mongo.Collection
-}
-
-func NewHandler(col *mongo.Collection) *Handler {
-	// struct construction, create new Handler
-	return &Handler{db: col}
-}
-
 func (h *Handler) GetTodobyIDHandler(c *gin.Context) {
 	// Param returns the value of the URL param. It is a shortcut for c.Params.ByName(key)
 	id := c.Param("id")

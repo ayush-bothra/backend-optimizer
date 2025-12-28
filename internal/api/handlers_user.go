@@ -96,6 +96,8 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 
 }
 
+//*************************************************************************************
+
 func (h *UserHandler) Register(c *gin.Context) {
 	var req struct {
 		Email string `json:"email" binding:"required"`

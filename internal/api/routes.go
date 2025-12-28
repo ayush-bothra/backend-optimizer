@@ -73,11 +73,16 @@ func Auth0MiddleWare(jwtValidator *validator.Validator) gin.HandlerFunc {
 			return
 		}
 
+		log.Println("Auth middleware hit")
+		// log.Println("Token:", token)
 		validated, err := jwtValidator.ValidateToken(ctx.Request.Context(), token)
 		if err != nil {
+			log.Println("JWT validation failed:", err)
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"err": err.Error()})
 			return
 		}
+		log.Println("JWT validated:", validated)
+
 
 		ctx.Set("jwt", validated)
 		ctx.Next()
@@ -110,6 +115,7 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 	r.POST("/Register", uh.Register)
 	r.POST("/Login", uh.Login)
 	r.POST("/todos", gjwt, h.CreateTodoByID)
+	r.POST("/askAI", gjwt, h.AIquery)
 	r.PUT("/todos/:id", gjwt, h.UpdateTodoByID)
 	r.DELETE("/todos/:id", gjwt, h.DeleteTodoByID)
 	r.DELETE("/todos/", gjwt, h.DeleteTodoByType)
