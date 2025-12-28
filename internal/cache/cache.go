@@ -2,14 +2,14 @@ package cache
 
 /*
 this file will manage the caching
-using ristretto cacher
+using redis
 
 imports required:
-dgraph-io/ristretto
+redis
 the utils package
 
 functions:
-func initCache() *ristretto.Cache
+func initCache() *redis.client
 func get(key string) (interface{}, bool) get from cache
 func set(key string, value interface{}) set in cache
 
@@ -35,7 +35,7 @@ func ConnectToRedis() *redis.Client {
 	// we will here use the standard, ie 0
 	// Protocol: 2 -> specifies the Redis Serialization Protocol (RESP)
 	// 2 is the older version (stable), 3 is new, intro: redis 6
-	// the password is redis leve auth, this is mandatory for communication
+	// the password is redis level auth, this is mandatory for communication
 	// with redis
 
 	ctx := context.Background()
