@@ -16,11 +16,30 @@ type ReqBody struct {
 	Messages []Message `json:"messages"`
 }
 
+type Choice struct {
+	Index int `json:"index"`
+	Message Message `json:"message"`
+	FinishReason string `json:"finish_reason"`
+} 
+
+type Usage struct {
+	PromptTokens int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens int `json:"total_tokens"`
+}
+
+type RespBody struct {
+	ID string `json:"id"`
+	Model string `json:"model"`
+	Choices []Choice `json:"choices"`
+	Usage Usage `json:"usage"`
+}
+
 const GroqEndPoint = "https://api.groq.com/openai/v1/chat/completions"
 
 
 func NewRequest(messages []Message) *ReqBody {
-	model := "llama3-8b-8192"
+	model := "llama-3.1-8b-instant"
 	req := ReqBody{Model: model, Messages: messages}
 	return &req
 }
