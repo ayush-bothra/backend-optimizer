@@ -30,6 +30,7 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -90,7 +91,7 @@ func Auth0MiddleWare(jwtValidator *validator.Validator) gin.HandlerFunc {
 }
 
 // SetUpRoutes configures Gin routes with JWT middleware.
-func SetUpRoutes(db *mongo.Collection) *gin.Engine {
+func SetUpRoutes(db *mongo.Collection, rdb *redis.Client) *gin.Engine {
 	r := gin.Default()
 
 	jwtValidator, err := NewAuthValidator()
@@ -106,7 +107,7 @@ func SetUpRoutes(db *mongo.Collection) *gin.Engine {
 	gjwt := Auth0MiddleWare(jwtValidator)
 
 	// Handlers
-	h := NewHandler(db)
+	h := NewHandler(db, rdb)
 	uh := NewUserHandler(db)
 
 	// Routes

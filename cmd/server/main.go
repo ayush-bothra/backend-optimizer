@@ -49,9 +49,9 @@ func main() {
 		}
 	}()
 	defer rdb.Close()
-	ctx := context.Background()
-	r := api.SetUpRoutes(DB.Collection("todos"))
-	cache.SetToRedis(rdb, ctx, "intro", "hello world")
-	cache.GetFromRedis(rdb, ctx, "intro")
+	// ctx := context.Background()
+	r := api.SetUpRoutes(DB.Collection("todos"), rdb)
+	// cache.SetToRedis(rdb, ctx, "intro", "hello world")
+	// cache.GetFromRedis(rdb, ctx, "intro")
 	r.Run(":8080")
 }

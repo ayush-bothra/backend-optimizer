@@ -17,9 +17,13 @@ here interface{} means that it can hold any type of data
 */
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"time"
 )
+
+var ErrCacheMiss = errors.New("cache: key not found")
 
 func ConnectToRedis() *redis.Client {
 	// NewClient returns a client to the 
@@ -47,21 +51,19 @@ func ConnectToRedis() *redis.Client {
 }
 
 // shld run later on a gin handlerfunc to add to list of calls
-func SetToRedis(rdb *redis.Client, ctx context.Context, key string, value interface{}) {
-	if err := rdb.Set(ctx, key, value, 0).Err(); err != nil {
-		panic(err)
-	}
+func SetToRedis(rdb *redis.Client, ctx context.Context, key string, value []byte, ttl time.Duration) error {
+	return rdb.Set(ctx, key, value, ttl).Err()
 }
 
 // shld run later on a gin handlerfunc to add to list of calls
-func GetFromRedis(rdb *redis.Client, ctx context.Context, key string) string {
+func GetFromRedis(rdb *redis.Client, ctx context.Context, key string) ([]byte, bool, error) {
 	rep, err := rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
 		fmt.Println("key doesnt exist")
-		return ""
+		return nil, false, ErrCacheMiss
 	} else if err != nil {
-		panic(err)
+		return nil, false, err
 	}
 
-	return rep
+	return []byte(rep), true, nil
 }
